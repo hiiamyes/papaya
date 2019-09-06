@@ -1,0 +1,45 @@
+version: "3"
+services:
+  db:
+    build: ./db
+    env_file: ./db/.env
+    ports:
+      - "5434:5432"
+    volumes:
+      - ./db/.aws:/root/.aws
+      - ./db/scripts:/app/scripts
+      - ./db/backup:/app/backup
+      - ~/postgresql/pangolin/data:/var/lib/postgresql/data
+  db-migrate:
+    build: ./db-migrate
+    volumes:
+      - ./db-migrate/migrations:/app/migrations
+    depends_on:
+      - db
+  api:
+    build: ./api
+    env_file: ./api/.env
+    volumes:
+      - ./api/src:/app/src
+    ports:
+      - "4000:4000"
+    depends_on:
+      - db
+  crawler:
+    build: ./crawler
+    env_file: ./crawler/.env
+    volumes:
+      - ./crawler/src:/app/src
+    depends_on:
+      - db
+  web:
+    build: ./web
+    env_file: ./web/.env
+    volumes:
+      - ./web/src:/app/src
+      - ./web/build:/app/build
+    ports:
+      - "3002:3002"
+    depends_on:
+      - db
+      - api
